@@ -2,6 +2,10 @@
 
 A Toy KV Database (Server).
 
+## Project Current Status
+
+A merely working POC. See To Do List Below for details.
+
 ## Build & Run Server
 
 A simple `cargo run` in root of the repo should do the job:
@@ -30,10 +34,10 @@ Hint: You can use `nc` instead if you don't have telnet on head.
 Since for now it's just a toy, so we used a lot of `expect()`, `unwrap()` in
 code. This should be solved in future.
 
-## TO DO
+## To Do List
 
 - Store Tree Implementation
-- Store data save in disk (refer Redis)
+- DB Data Persistence in disk (refer Redis)
 - Refine API param types
 - Thread Safe
 - Perf tuning
