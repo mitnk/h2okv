@@ -21,7 +21,7 @@ We will use telnet for client.
 $ telnet 127.0.0.1 30160
 > get foo
 None
-> set foo bar
+> put foo bar
 true
 > get foo
 bar
