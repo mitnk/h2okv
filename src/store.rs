@@ -4,13 +4,23 @@
 ///
 /// [0] https://en.wikipedia.org/wiki/2-3_tree
 use std::collections::HashMap;
+use std::str;
 
-pub type _DB = HashMap<&'static str, &'static [u8]>;
+// FIXME: we should use `HashMap<&[u8], &[u8]>` here,
+// using String for it to work for now.
+pub type DB = HashMap<String, String>;
 
-pub fn get(_key: &str) -> Option<&'static [u8]> {
-    None
+pub fn get(key: &str, db: &DB) -> Option<String> {
+    match db.get(key) {
+        Some(x) => {
+            Some(x.clone())
+        }
+        None => None
+    }
 }
 
-pub fn put(_key: &str, _value: &[u8]) -> Result<(), &'static str> {
-    Err("todo")
+pub fn put(key: &str, value: &[u8], db: &mut DB) -> Result<(), &'static str> {
+    let data = str::from_utf8(value).unwrap();
+    db.insert(key.to_string(), data.to_string());
+    Ok(())
 }

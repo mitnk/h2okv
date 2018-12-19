@@ -1,12 +1,11 @@
 use std::io::Read;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
-use std::str;
-use std::thread;
 
 use crate::engine;
+use crate::store;
 
-pub fn run() {
+pub fn run(db: &mut store::DB) {
     let host = "127.0.0.1";
     let port = 30160;
     let addr = format!("{}:{}", host, port);
@@ -16,16 +15,14 @@ pub fn run() {
     for connection in listener.incoming() {
         match connection {
             Ok(stream) => {
-                thread::spawn(|| {
-                    handle_client(stream);
-                });
+                handle_client(stream, db);
             }
             Err(e) => panic!(e),
         }
     }
 }
 
-fn handle_client(mut stream: TcpStream) {
+fn handle_client(mut stream: TcpStream, db: &mut store::DB) {
     println!("client accepted");
 
     let mut buffer = [0; 64];
@@ -37,12 +34,12 @@ fn handle_client(mut stream: TcpStream) {
 
             // TODO: handle inputs longer than 64 bytes,
             // for now we assume all inputs are inside 64 bytes
-            match engine::handle_input(&buffer[0..read]) {
+            match engine::handle_input(&buffer[0..read], db) {
                 Ok(x) => {
                     // since we are testing with telnet, we want to see
                     // str instead of byte integers, thus we use the dirty
                     // from_utf8() (and unwrap() for now).
-                    let data = format!("{}\n", str::from_utf8(&x).unwrap());
+                    let data = format!("{}\n", &x);
                     if let Err(_) = stream.write(data.as_bytes()) {
                         break;
                     }

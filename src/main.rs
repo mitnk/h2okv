@@ -6,5 +6,7 @@ mod store;
 mod tools;
 
 fn main() {
-    server::run();
+    let mut db = store::DB::new();
+    db.insert("foo".to_string(), "bar".to_string());
+    server::run(&mut db);
 }

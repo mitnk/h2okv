@@ -36,5 +36,6 @@ code. This should be solved in future.
 - Store data save in disk (refer Redis)
 - Refine API param types
 - Thread Safe
+- Perf tuning
 - Remove all `unwrap()`, `expect()`.
 - and more ...
