@@ -27,3 +27,52 @@ pub fn put(key: &str, value: &[u8], db: &mut DB) -> Result<(), &'static str> {
     persistence::save_to_file(db);
     Ok(())
 }
+
+pub fn delete(key: &str, db: &mut DB) -> Option<String> {
+    match db.remove(key) {
+        Some(x) => {
+            Some(x)
+        }
+        None => None
+    }
+}
+
+pub fn scan(key: &str, db: &DB) -> Vec<String> {
+    let mut result = Vec::new();
+    for k in db.keys() {
+        if k.contains(key) {
+            result.push(k.to_string());
+        }
+    }
+    return result;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DB, delete, get, put, scan};
+
+    #[test]
+    fn test_store() {
+        let mut db = DB::new();
+        assert_eq!(get("foo", &db), None);
+
+        assert!(put("foo", "bar".as_bytes(), &mut db).is_ok());
+        assert_eq!(get("foo", &db), Some("bar".to_string()));
+        assert_eq!(scan("f", &db), vec!["foo".to_string()]);
+        assert_eq!(
+            scan("z", &db),
+            Vec::<String>::new(),
+        );
+
+        assert!(put("find", "rust".as_bytes(), &mut db).is_ok());
+        let v = scan("f", &db);
+        assert!(v.contains(&String::from("find")));
+        assert!(v.contains(&String::from("foo")));
+
+        assert_eq!(delete("foo", &mut db), Some("bar".to_string()));
+        assert_eq!(get("foo", &db), None);
+        assert_eq!(scan("f", &db), vec!["find".to_string()]);
+
+        assert_eq!(delete("foo", &mut db), None);
+    }
+}

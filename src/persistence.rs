@@ -15,14 +15,13 @@
 use std::env;
 use std::fs::File;
 use std::io::BufReader;
-use std::io::Cursor;
 use std::io::ErrorKind;
 use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
 
-use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian};
 
 use crate::store;
+use crate::tools;
 
 fn current_dir() -> Option<String> {
     let _current_dir;
@@ -55,28 +54,6 @@ fn get_db_file() -> Option<String> {
     }
 }
 
-fn bytes_to_u64(bytes: &mut Vec<u8>) -> u64 {
-    while bytes.len() < 8 {
-        bytes.push(0_u8);
-    }
-    let mut rdr = Cursor::new(&bytes);
-    return rdr.read_u64::<LittleEndian>().expect("read_u64 error");
-}
-
-fn u64_to_bytes(n: u64) -> (u8, Vec<u8>) {
-    let mut buffer = vec![];
-    buffer.write_u64::<LittleEndian>(n).unwrap();
-    let mut count: u8 = 0;
-    for x in &buffer {
-        if *x == 0 {
-            break;
-        }
-        count += 1;
-    }
-    buffer.truncate(count as usize);
-    return (count, buffer);
-}
-
 pub fn save_to_file(db: &store::DB) {
     let file_path = match get_db_file() {
         Some(x) => x,
@@ -95,12 +72,12 @@ pub fn save_to_file(db: &store::DB) {
 
     let mut buffer: Vec<u8> = Vec::new();
     for (key, value) in db {
-        let (count, bytes) = u64_to_bytes(key.len() as u64);
+        let (count, bytes) = tools::u64_to_bytes(key.len() as u64);
         buffer.push(0x0c_u8);  // header
         buffer.push(count.into());  // key-length-bytes count
         buffer.extend(&bytes); // key-length bytes
         buffer.extend(key.as_bytes());
-        let (count, bytes) = u64_to_bytes(value.len() as u64);
+        let (count, bytes) = tools::u64_to_bytes(value.len() as u64);
         buffer.push(count.into());  // value-length-bytes count
         buffer.extend(&bytes); // value-length bytes
         buffer.extend(value.as_bytes());
@@ -175,7 +152,7 @@ pub fn load_from_file(arc_db: Arc<Mutex<store::DB>>) {
         read_buffer(&mut reader, &mut buf_key_len, false);
 
         // 3. read key bytes
-        let key_bytes_count = bytes_to_u64(&mut buf_key_len);
+        let key_bytes_count = tools::bytes_to_u64(&mut buf_key_len);
         let mut buf_key = Vec::with_capacity(key_bytes_count as usize);
         for _ in 0..key_bytes_count {
             buf_key.push(0_u8);
@@ -196,7 +173,7 @@ pub fn load_from_file(arc_db: Arc<Mutex<store::DB>>) {
         read_buffer(&mut reader, &mut buf_value_len, false);
 
         // 3. read value bytes
-        let value_bytes_count = bytes_to_u64(&mut buf_value_len);
+        let value_bytes_count = tools::bytes_to_u64(&mut buf_value_len);
         let mut buf_value = Vec::with_capacity(value_bytes_count as usize);
         for _ in 0..value_bytes_count {
             buf_value.push(0_u8);

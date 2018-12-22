@@ -29,17 +29,9 @@ bar
 
 Hint: You can use `nc` instead if you don't have telnet on head.
 
-## Stability
-
-Since for now it's just a toy, so we used a lot of `expect()`, `unwrap()` in
-code. This should be solved in future.
-
 ## To Do List
 
-- Store Tree Implementation
-- DB Data Persistence in disk (refer Redis)
-- Refine API param types
-- Thread Safe
-- Perf tuning
-- Remove all `unwrap()`, `expect()`.
-- and more ...
+- command: del; scan
+- remove all `unwrap()`, `expect()`.
+- UT
+- use a more mature protocol
