@@ -31,5 +31,5 @@ Hint: You can use `nc` instead if you don't have telnet on head.
 
 ## To Do List
 
-- UT
-- use a more mature protocol
+- doc all pub functions
+- use a more mature protocol (with header, content len bytes)

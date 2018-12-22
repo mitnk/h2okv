@@ -1,10 +1,12 @@
 use std::str;
 use std::sync::{Arc, Mutex};
 
+use crate::persistence;
 use crate::store;
 use crate::tools;
 
 pub fn handle_input(cmd: &[u8], arc_db: Arc<Mutex<store::DB>>) -> Result<String, &'static str> {
+    // lock db for each query for consistancy
     let mut db = arc_db.lock().unwrap();
 
     let _cmd = str::from_utf8(cmd).unwrap().trim();
@@ -20,6 +22,10 @@ pub fn handle_input(cmd: &[u8], arc_db: Arc<Mutex<store::DB>>) -> Result<String,
     if tools::re_contains(r"^ *(put|set)  *[^\s]+  *[^\s]+ *$", _cmd) {
         let tokens: Vec<&str> = _cmd.split_whitespace().collect();
         if let Ok(_) = store::put(tokens[1], tokens[2].as_bytes(), &mut db) {
+            // TODO: see comments on top part of file: persistence.rs
+            if let Some(db_file) = tools::get_db_file() {
+                persistence::save_to_file(&db_file, &db);
+            }
             return Ok("1".to_string());
         } else {
             return Ok("0".to_string());
@@ -29,6 +35,10 @@ pub fn handle_input(cmd: &[u8], arc_db: Arc<Mutex<store::DB>>) -> Result<String,
     if tools::re_contains(r"^ *del  *[^\s]+ *$", _cmd) {
         let tokens: Vec<&str> = _cmd.split_whitespace().collect();
         if let Some(x) = store::delete(tokens[1], &mut db) {
+            // TODO: see comments on top part of file: persistence.rs
+            if let Some(db_file) = tools::get_db_file() {
+                persistence::save_to_file(&db_file, &db);
+            }
             return Ok(x.to_string());
         } else {
             return Ok("(None)".to_string());

@@ -1,3 +1,4 @@
+use std::env;
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
@@ -49,9 +50,37 @@ pub fn u16_to_bytes(n: u16) -> [u8; 2] {
     array
 }
 
+fn current_dir() -> Option<String> {
+    let _current_dir;
+    match env::current_dir() {
+        Ok(x) => _current_dir = x,
+        Err(e) => {
+            println!("env current_dir error: {:?}", e);
+            return None;
+        }
+    }
+    let current_dir;
+    match _current_dir.to_str() {
+        Some(x) => current_dir = x,
+        None => {
+            println!("current_dir to_str error");
+            return None;
+        }
+    }
+    Some(current_dir.to_string())
+}
+
+pub fn get_db_file() -> Option<String> {
+    match current_dir() {
+        Some(dir) => Some(format!("{}/{}", dir, "h2okv.data")),
+        None => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::bytes_to_u64;
+    use super::re_contains;
     use super::u16_to_bytes;
     use super::u64_to_bytes;
 
@@ -94,5 +123,16 @@ mod tests {
         _u64_assert(0x100000000000000, 8, &[0, 0, 0, 0, 0, 0, 0, 1]);
         _u64_assert(0x100000000000001, 8, &[1, 0, 0, 0, 0, 0, 0, 1]);
         _u64_assert(0xFFFFFFFFFFFFFFFF, 8, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+    }
+
+    #[test]
+    fn test_re_contains() {
+        assert!(re_contains(r"", ""));
+        assert!(re_contains(r"a", "a"));
+        assert!(re_contains(r"b", "abc"));
+        assert!(!re_contains(r"^b", "abc"));
+        assert!(re_contains(r"^a.*c$", "abc"));
+        assert!(re_contains(r"^f(.+) b(.*) b(.{2})$", "foo bar baz"));
+        assert!(!re_contains(r"^f(.+) b(.*) b(.{3})$", "foo bar baz"));
     }
 }
