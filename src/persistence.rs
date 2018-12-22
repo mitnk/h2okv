@@ -16,6 +16,7 @@ use std::env;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Cursor;
+use std::io::ErrorKind;
 use std::io::{Read, Write};
 
 use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian};
@@ -138,7 +139,11 @@ pub fn load_from_file(db: &mut store::DB) {
     let file = match File::open(&file_path) {
         Ok(file) => file,
         Err(why) => {
-            println!("couldn't create db file: {:?}", why);
+            if why.kind() == ErrorKind::NotFound {
+                println!("No existing db file found.");
+                return;
+            }
+            println!("open db file failed: {:?}", why);
             return;
         }
     };
