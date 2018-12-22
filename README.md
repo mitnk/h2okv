@@ -2,10 +2,6 @@
 
 A Toy KV Database (Server).
 
-## Project Current Status
-
-A merely working POC. See To Do List Below for details.
-
 ## Build & Run Server
 
 A simple `cargo run` in root of the repo should do the job:
@@ -20,7 +16,7 @@ We will use telnet for client.
 ```
 $ telnet 127.0.0.1 30160
 > get foo
-None
+(None)
 > put foo bar
 true
 > get foo
@@ -33,3 +29,4 @@ Hint: You can use `nc` instead if you don't have telnet on head.
 
 - doc all pub functions
 - use a more mature protocol (with header, content len bytes)
+- h2okv-cli
