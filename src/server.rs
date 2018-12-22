@@ -42,7 +42,7 @@ fn handle_client(mut stream: TcpStream, arc_db: Arc<Mutex<store::DB>>) {
                 Ok(x) => {
                     // since we are testing with telnet, we want to see
                     // str instead of byte integers, thus we use the dirty
-                    // from_utf8() (and unwrap() for now).
+                    // from_utf8().
                     let data = format!("{}\n", &x);
                     if let Err(_) = stream.write(data.as_bytes()) {
                         break;

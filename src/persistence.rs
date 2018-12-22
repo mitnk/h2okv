@@ -146,7 +146,7 @@ pub fn load_from_file(arc_db: Arc<Mutex<store::DB>>) {
         read_buffer(&mut reader, &mut buf_key_len, false);
 
         // 3. read key bytes
-        let key_bytes_count = tools::bytes_to_u64(&mut buf_key_len);
+        let key_bytes_count = tools::bytes_to_u64(&buf_key_len);
         let mut buf_key = Vec::with_capacity(key_bytes_count as usize);
         for _ in 0..key_bytes_count {
             buf_key.push(0_u8);
@@ -167,7 +167,7 @@ pub fn load_from_file(arc_db: Arc<Mutex<store::DB>>) {
         read_buffer(&mut reader, &mut buf_value_len, false);
 
         // 3. read value bytes
-        let value_bytes_count = tools::bytes_to_u64(&mut buf_value_len);
+        let value_bytes_count = tools::bytes_to_u64(&buf_value_len);
         let mut buf_value = Vec::with_capacity(value_bytes_count as usize);
         for _ in 0..value_bytes_count {
             buf_value.push(0_u8);

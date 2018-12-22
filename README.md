@@ -31,6 +31,5 @@ Hint: You can use `nc` instead if you don't have telnet on head.
 
 ## To Do List
 
-- remove all `unwrap()`, `expect()`.
 - UT
 - use a more mature protocol
