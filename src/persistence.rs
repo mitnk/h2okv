@@ -18,6 +18,7 @@ use std::io::BufReader;
 use std::io::Cursor;
 use std::io::ErrorKind;
 use std::io::{Read, Write};
+use std::sync::{Arc, Mutex};
 
 use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian};
 
@@ -127,7 +128,10 @@ fn read_buffer(reader: &mut BufReader<File>, buffer: &mut [u8], can_be_empty: bo
     }
 }
 
-pub fn load_from_file(db: &mut store::DB) {
+pub fn load_from_file(arc_db: Arc<Mutex<store::DB>>) {
+    let clone_arc = arc_db.clone();
+    let mut db = clone_arc.lock().unwrap();
+
     let file_path = match get_db_file() {
         Some(x) => x,
         None => {
