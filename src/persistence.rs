@@ -4,7 +4,7 @@
 ///
 /// Basically, we loop on all keys in the HashMap (our data store in memory),
 /// for each key, we save it into buffer with content
-/// `"\x0C<key-len-byte><key-len-bytes><key-bytes><value-len-byte><value-len-bytes><value-bytes>\x0C<next-key-value-bytes>"`
+/// `"\x0C<key-len-byte><key-len-bytes><key-bytes><value-len-byte><value-len-bytes><value-bytes>\x0C<next-key-value-item>"`
 /// where `"\x0C"` are one-byte header for future possible feature
 /// expansing usage; `<key-len-byte>` is one-byte that how many bytes
 /// the next `<key-len-bytes>` used. which store the real key bytes in total
@@ -14,7 +14,9 @@
 
 use std::env;
 use std::fs::File;
-use std::io::Write;
+use std::io::BufReader;
+use std::io::Cursor;
+use std::io::{Read, Write};
 
 use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian};
 
@@ -49,6 +51,14 @@ fn get_db_file() -> Option<String> {
             None
         }
     }
+}
+
+fn bytes_to_u64(bytes: &mut Vec<u8>) -> u64 {
+    while bytes.len() < 8 {
+        bytes.push(0_u8);
+    }
+    let mut rdr = Cursor::new(&bytes);
+    return rdr.read_u64::<LittleEndian>().expect("read_u64 error");
 }
 
 fn u64_to_bytes(n: u64) -> (u8, Vec<u8>) {
@@ -96,5 +106,97 @@ pub fn save_to_file(db: &store::DB) {
 
     if let Err(e) = file.write_all(&buffer) {
         println!("Error when save db: {:?}", e);
+    }
+}
+
+fn read_buffer(reader: &mut BufReader<File>, buffer: &mut [u8], can_be_empty: bool) -> bool {
+    match reader.read(buffer) {
+        Ok(n) => {
+            if n == 0 {
+                if !can_be_empty {
+                    panic!("cannot read any data");
+                }
+                return false;
+            }
+            true
+        }
+        Err(e) => {
+            panic!("buffer read error: {:?}", e);
+        }
+    }
+}
+
+pub fn load_from_file(db: &mut store::DB) {
+    let file_path = match get_db_file() {
+        Some(x) => x,
+        None => {
+            println!("cannot get db file path");
+            return;
+        }
+    };
+
+    let file = match File::open(&file_path) {
+        Ok(file) => file,
+        Err(why) => {
+            println!("couldn't create db file: {:?}", why);
+            return;
+        }
+    };
+
+    let mut reader = BufReader::new(file);
+    loop {
+        // read and confirm the header
+        let mut buf_header = [0_u8; 1];
+        if !read_buffer(&mut reader, &mut buf_header, true) {
+            break;  // EOF
+        }
+        assert_eq!(&buf_header, &[0x0c_u8]);
+
+        // BEGIN of read key
+        // 1. read key length byte
+        let mut buf_key_len_byte = [0_u8; 1];
+        read_buffer(&mut reader, &mut buf_key_len_byte, false);
+
+        // 2. read key length bytes
+        let count = buf_key_len_byte[0] as usize;
+        let mut buf_key_len = Vec::with_capacity(count);
+        for _ in 0..count {
+            buf_key_len.push(0_u8);
+        }
+        read_buffer(&mut reader, &mut buf_key_len, false);
+
+        // 3. read key bytes
+        let key_bytes_count = bytes_to_u64(&mut buf_key_len);
+        let mut buf_key = Vec::with_capacity(key_bytes_count as usize);
+        for _ in 0..key_bytes_count {
+            buf_key.push(0_u8);
+        }
+        read_buffer(&mut reader, &mut buf_key, false);
+
+        // BEGIN of read value
+        // 1. read value length byte
+        let mut buf_value_len_byte = [0_u8; 1];
+        read_buffer(&mut reader, &mut buf_value_len_byte, false);
+
+        // 2. read value length bytes
+        let count = buf_value_len_byte[0] as usize;
+        let mut buf_value_len = Vec::with_capacity(count);
+        for _ in 0..count {
+            buf_value_len.push(0_u8);
+        }
+        read_buffer(&mut reader, &mut buf_value_len, false);
+
+        // 3. read value bytes
+        let value_bytes_count = bytes_to_u64(&mut buf_value_len);
+        let mut buf_value = Vec::with_capacity(value_bytes_count as usize);
+        for _ in 0..value_bytes_count {
+            buf_value.push(0_u8);
+        }
+        read_buffer(&mut reader, &mut buf_value, false);
+
+        db.insert(
+            String::from_utf8(buf_key).unwrap(),
+            String::from_utf8(buf_value).unwrap(),
+        );
     }
 }
