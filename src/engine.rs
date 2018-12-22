@@ -12,12 +12,9 @@ pub fn handle_input(cmd: &[u8], db: &mut store::DB) -> Result<String, &'static s
         } else {
             return Ok("(None)".to_string());
         }
-    } else {
-        println!("re not match: {:?}", _cmd);
     }
 
-
-    if tools::re_contains(r"^ *put  *\w+  *\w+$", _cmd) {
+    if tools::re_contains(r"^ *(put|set)  *\w+  *\w+$", _cmd) {
         let tokens: Vec<&str> = _cmd.split_whitespace().collect();
         if let Ok(_) = store::put(tokens[1], tokens[2].as_bytes(), db) {
             return Ok("true".to_string());

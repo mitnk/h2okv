@@ -6,6 +6,8 @@
 use std::collections::HashMap;
 use std::str;
 
+use crate::persistence;
+
 // FIXME: we should use `HashMap<&[u8], &[u8]>` here,
 // using String for it to work for now.
 pub type DB = HashMap<String, String>;
@@ -22,5 +24,6 @@ pub fn get(key: &str, db: &DB) -> Option<String> {
 pub fn put(key: &str, value: &[u8], db: &mut DB) -> Result<(), &'static str> {
     let data = str::from_utf8(value).unwrap();
     db.insert(key.to_string(), data.to_string());
+    persistence::save_to_file(db);
     Ok(())
 }
