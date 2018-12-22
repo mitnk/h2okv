@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use regex::Regex;
 
 pub fn re_contains(ptn: &str, text: &str) -> bool {

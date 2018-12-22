@@ -14,10 +14,8 @@ pub type DB = HashMap<String, String>;
 
 pub fn get(key: &str, db: &DB) -> Option<String> {
     match db.get(key) {
-        Some(x) => {
-            Some(x.clone())
-        }
-        None => None
+        Some(x) => Some(x.clone()),
+        None => None,
     }
 }
 
@@ -30,10 +28,8 @@ pub fn put(key: &str, value: &[u8], db: &mut DB) -> Result<(), &'static str> {
 
 pub fn delete(key: &str, db: &mut DB) -> Option<String> {
     match db.remove(key) {
-        Some(x) => {
-            Some(x)
-        }
-        None => None
+        Some(x) => Some(x),
+        None => None,
     }
 }
 
@@ -49,7 +45,7 @@ pub fn scan(key: &str, db: &DB) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{DB, delete, get, put, scan};
+    use super::{delete, get, put, scan, DB};
 
     #[test]
     fn test_store() {
@@ -59,10 +55,7 @@ mod tests {
         assert!(put("foo", "bar".as_bytes(), &mut db).is_ok());
         assert_eq!(get("foo", &db), Some("bar".to_string()));
         assert_eq!(scan("f", &db), vec!["foo".to_string()]);
-        assert_eq!(
-            scan("z", &db),
-            Vec::<String>::new(),
-        );
+        assert_eq!(scan("z", &db), Vec::<String>::new());
 
         assert!(put("find", "rust".as_bytes(), &mut db).is_ok());
         let v = scan("f", &db);

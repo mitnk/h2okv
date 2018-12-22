@@ -1,8 +1,8 @@
 use std::str;
 use std::sync::{Arc, Mutex};
 
-use crate::tools;
 use crate::store;
+use crate::tools;
 
 pub fn handle_input(cmd: &[u8], arc_db: Arc<Mutex<store::DB>>) -> Result<String, &'static str> {
     let mut db = arc_db.lock().unwrap();
@@ -40,8 +40,8 @@ pub fn handle_input(cmd: &[u8], arc_db: Arc<Mutex<store::DB>>) -> Result<String,
         let keys = store::scan(&tokens[1], &db);
         let mut result: Vec<u8> = Vec::new();
         for k in keys {
-            result.push(0x0C_u8);  // header
-            result.push(0x0C_u8);  // header
+            result.push(0x0C_u8); // header
+            result.push(0x0C_u8); // header
             let length_bytes = tools::u16_to_bytes(k.len() as u16);
             result.extend(&length_bytes);
             result.extend(k.as_bytes());

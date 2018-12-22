@@ -11,14 +11,12 @@
 /// the following `<key-bytes>` stored. The value bytes are the same logic.
 ///
 /// [0][1] https://redis.io/topics/persistence
-
 use std::env;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::ErrorKind;
 use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
-
 
 use crate::store;
 use crate::tools;
@@ -45,12 +43,8 @@ fn current_dir() -> Option<String> {
 
 fn get_db_file() -> Option<String> {
     match current_dir() {
-        Some(dir) => {
-            Some(format!("{}/{}", dir, "h2okv.data"))
-        }
-        None => {
-            None
-        }
+        Some(dir) => Some(format!("{}/{}", dir, "h2okv.data")),
+        None => None,
     }
 }
 
@@ -73,12 +67,12 @@ pub fn save_to_file(db: &store::DB) {
     let mut buffer: Vec<u8> = Vec::new();
     for (key, value) in db {
         let (count, bytes) = tools::u64_to_bytes(key.len() as u64);
-        buffer.push(0x0c_u8);  // header
-        buffer.push(count.into());  // key-length-bytes count
+        buffer.push(0x0c_u8); // header
+        buffer.push(count.into()); // key-length-bytes count
         buffer.extend(&bytes); // key-length bytes
         buffer.extend(key.as_bytes());
         let (count, bytes) = tools::u64_to_bytes(value.len() as u64);
-        buffer.push(count.into());  // value-length-bytes count
+        buffer.push(count.into()); // value-length-bytes count
         buffer.extend(&bytes); // value-length bytes
         buffer.extend(value.as_bytes());
     }
@@ -134,7 +128,7 @@ pub fn load_from_file(arc_db: Arc<Mutex<store::DB>>) {
         // read and confirm the header
         let mut buf_header = [0_u8; 1];
         if !read_buffer(&mut reader, &mut buf_header, true) {
-            break;  // EOF
+            break; // EOF
         }
         assert_eq!(&buf_header, &[0x0c_u8]);
 
