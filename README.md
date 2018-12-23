@@ -4,26 +4,34 @@ A Toy KV Database (Server).
 
 ## Build & Run Server
 
-A simple `cargo run` in root of the repo should do the job:
 ```
-$ cargo run
+$ make
 H2o KV started at 127.0.0.1:30160
 ```
 
-## Testing with Client
+## Build & Run Client
 
-We will use telnet for client.
 ```
-$ telnet 127.0.0.1 30160
-> get foo
+$ make cli
+Connected to h2okv server 127.0.0.1:30160, Ctrl-D to exit
+h2okv> get foo
 (None)
-> put foo bar
-true
-> get foo
-bar
+h2okv> set foo bar
+OK
+h2okv> get foo
+"bar"
+h2okv> put first 135
+OK
+h2okv> scan f
+1) "first"
+2) "foo"
 ```
 
-Hint: You can use `nc` instead if you don't have telnet on head.
+## DB Data Persistence
+
+Each write query would make the whole DB saved into a file named `h2okv.data`
+under *current working directory*. For more details on disk persistence,
+please see comments in file `src/persistence.rs`.
 
 ## H2oKV Protocols
 
