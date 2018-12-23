@@ -29,7 +29,7 @@ Hint: You can use `nc` instead if you don't have telnet on head.
 
 ### Queries
 
-The query is formed as follows:
+The query is formed as follow:
 
     +--------+-----+------+--------+----------+
     | Header | CMD | Flag | Length | Content  |
@@ -40,16 +40,16 @@ The query is formed as follows:
 **Where**:
 
 - Header
-    - protocol header: alwasy be `\x0c` for now.
+    - protocol header: always be `\x0c` for now.
 - CMD
     - GET: `\x01`
-    - PUT: `\x02` *see next protocal table*
+    - PUT: `\x02` *see next protocol table*
     - DEL: `\x03`
     - SCAN: `\x04`
 - Flag
-    - Plain Text: `\x01`
-    - GZIP Text: `\x02`
-    - Ciphered Text: `\x03` (TBD)
+    - Plain Text: `\x00`
+    - GZIP Text: `\x01`
+    - Ciphered Text: `\x02` (details TBD)
 - Length
     - Two bytes indicating how many bytes the Content part are. LittleEndian.
 - Content
@@ -85,7 +85,7 @@ The query is formed as follows:
     | '\x0c' | 1    | 1    | Var | Var     |
     +--------+------+------+-----+---------+
 
-**PUT**
+**PUT, Others**
 
     +--------+------+
     | Header | Flag |
@@ -96,6 +96,8 @@ The query is formed as follows:
 - Flag
     - OK: `\x00`
     - Failed: `\x01`
+    - No such Key: `\x02` (for `GET`)
+    - Unknown command: `\xFF`
 
 ## To Do List
 
