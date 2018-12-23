@@ -86,5 +86,4 @@ pub fn scan(key: &str, stream: &mut TcpStream) {
             }
         }
     }
-
 }

@@ -5,8 +5,8 @@ use std::str;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-use crate::store;
 use crate::persistence;
+use crate::store;
 use crate::tools;
 
 pub fn run(arc_db: Arc<Mutex<store::DB>>) {

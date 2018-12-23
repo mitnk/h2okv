@@ -155,10 +155,10 @@ pub fn load_from_file(db_file: &str, db: &mut store::DB) {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-    use super::store;
     use super::load_from_file;
     use super::save_to_file;
+    use super::store;
+    use std::path::PathBuf;
 
     #[test]
     fn test_load_from_file_empty() {
@@ -226,7 +226,10 @@ mod tests {
         let v = store::scan("", &db);
         assert_eq!(v.len(), 3);
         assert_eq!(store::get("foo", &db), Some("bar".to_string()));
-        assert_eq!(store::get("location", &db), Some("地铁西小口128号".to_string()));
+        assert_eq!(
+            store::get("location", &db),
+            Some("地铁西小口128号".to_string())
+        );
         assert_eq!(store::get("age", &db), Some("18".to_string()));
 
         // test delete item
@@ -237,6 +240,9 @@ mod tests {
         let v = store::scan("", &db);
         assert_eq!(v.len(), 2);
         assert_eq!(store::get("foo", &db), Some("bar".to_string()));
-        assert_eq!(store::get("location", &db), Some("地铁西小口128号".to_string()));
+        assert_eq!(
+            store::get("location", &db),
+            Some("地铁西小口128号".to_string())
+        );
     }
 }

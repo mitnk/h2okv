@@ -4,6 +4,8 @@ A Toy KV Database (Server).
 
 ## Build & Run Server
 
+**Required**: Rust 2018 (latest Rust Stable or later versions)
+
 ```
 $ make
 H2o KV started at 127.0.0.1:30160

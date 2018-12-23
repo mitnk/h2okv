@@ -1,6 +1,5 @@
+use std::io::{self, Write};
 use std::net::TcpStream;
-
-use linefeed::{Interface, ReadResult};
 
 mod cli;
 mod do_delete;
@@ -10,9 +9,6 @@ mod do_scan;
 mod tools;
 
 fn main() {
-    let reader = Interface::new("my-application").unwrap();
-    reader.set_prompt("h2okv> ").unwrap();
-
     let host = "127.0.0.1";
     let port = 30160;
     let addr = format!("{}:{}", host, port);
@@ -20,7 +16,14 @@ fn main() {
     match TcpStream::connect(&addr) {
         Ok(mut stream) => {
             println!("Connected to h2okv server {}, Ctrl-D to exit", &addr);
-            while let ReadResult::Input(input) = reader.read_line().unwrap() {
+
+            let stdin = io::stdin();
+            let input = &mut String::new();
+            loop {
+                input.clear();
+                print!("h2okv> ");
+                io::stdout().flush().unwrap();
+                stdin.read_line(input).unwrap();
                 cli::query(&input, &mut stream);
             }
         }
@@ -28,5 +31,4 @@ fn main() {
             println!("Failed to connect: {}", e);
         }
     }
-
 }

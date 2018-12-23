@@ -154,6 +154,10 @@ mod tests {
         _u64_assert(0x101010101010101, 8, &[1, 1, 1, 1, 1, 1, 1, 1]);
         _u64_assert(0x100000000000000, 8, &[0, 0, 0, 0, 0, 0, 0, 1]);
         _u64_assert(0x100000000000001, 8, &[1, 0, 0, 0, 0, 0, 0, 1]);
-        _u64_assert(0xFFFFFFFFFFFFFFFF, 8, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+        _u64_assert(
+            0xFFFFFFFFFFFFFFFF,
+            8,
+            &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+        );
     }
 }
