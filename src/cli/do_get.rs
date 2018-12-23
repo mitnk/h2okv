@@ -29,7 +29,7 @@ pub fn get(key: &str, stream: &mut TcpStream) {
         println!("query failed");
         return;
     } else if data[1] == 0x02 {
-        println!("no such key");
+        println!("(None)");
         return;
     } else if data[1] == 0xFF {
         println!("unknown command");

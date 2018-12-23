@@ -14,5 +14,4 @@ path = "src/cli/main.rs"
 
 [dependencies]
 byteorder = "1"
-regex = "1"
 linefeed = "0.5"

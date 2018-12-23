@@ -3,7 +3,9 @@ use std::net::TcpStream;
 use linefeed::{Interface, ReadResult};
 
 mod cli;
+mod do_delete;
 mod do_get;
+mod do_put;
 mod do_scan;
 mod tools;
 
@@ -18,7 +20,6 @@ fn main() {
     match TcpStream::connect(&addr) {
         Ok(mut stream) => {
             println!("Connected to h2okv server {}, Ctrl-D to exit", &addr);
-
             while let ReadResult::Input(input) = reader.read_line().unwrap() {
                 cli::query(&input, &mut stream);
             }

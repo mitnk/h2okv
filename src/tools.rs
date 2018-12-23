@@ -2,22 +2,10 @@ use std::env;
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use regex::Regex;
 
-pub fn re_contains(ptn: &str, text: &str) -> bool {
-    let re;
-    match Regex::new(ptn) {
-        Ok(x) => {
-            re = x;
-        }
-        Err(e) => {
-            println!("Regex new failed: {:?}", e);
-            return false;
-        }
-    }
-    re.is_match(text)
-}
-
+/// convert bytes to u64, LittleEndian
+///
+/// bytes are not necessarily to be length 8
 pub fn bytes_to_u64(bytes: &[u8]) -> u64 {
     let mut buf = [0; 8];
     for (i, x) in bytes.iter().enumerate() {
@@ -27,6 +15,7 @@ pub fn bytes_to_u64(bytes: &[u8]) -> u64 {
     return rdr.read_u64::<LittleEndian>().expect("read_u64 error");
 }
 
+/// Convert u32 to bytes of length 4, LittleEndian
 pub fn u32_to_bytes(n: u32) -> [u8; 4] {
     let mut buffer = vec![];
     buffer.write_u32::<LittleEndian>(n).unwrap();
@@ -35,6 +24,10 @@ pub fn u32_to_bytes(n: u32) -> [u8; 4] {
     array
 }
 
+/// Convert u64 to bytes of length 4, LittleEndian
+///
+/// bytes count is equal or less than 8. All right side ZEROs will be
+/// removed to save space.
 pub fn u64_to_bytes(n: u64) -> (u8, Vec<u8>) {
     let mut buffer = vec![];
     buffer.write_u64::<LittleEndian>(n).unwrap();
@@ -50,6 +43,7 @@ pub fn u64_to_bytes(n: u64) -> (u8, Vec<u8>) {
     return (count, buffer);
 }
 
+/// Convert bytes to u16
 pub fn bytes_to_u16(bytes: &[u8]) -> u16 {
     let mut buf = [0; 2];
     for (i, x) in bytes.iter().enumerate() {
@@ -59,6 +53,7 @@ pub fn bytes_to_u16(bytes: &[u8]) -> u16 {
     return rdr.read_u16::<LittleEndian>().expect("read_u16 error");
 }
 
+/// Convert u16 to bytes of length 2
 pub fn u16_to_bytes(n: u16) -> [u8; 2] {
     let mut buffer = vec![];
     buffer.write_u16::<LittleEndian>(n).unwrap();
@@ -96,19 +91,39 @@ pub fn get_db_file() -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    use super::bytes_to_u16;
     use super::bytes_to_u64;
-    use super::re_contains;
     use super::u16_to_bytes;
+    use super::u32_to_bytes;
     use super::u64_to_bytes;
 
     #[test]
     fn test_u16_to_bytes() {
         assert_eq!(&u16_to_bytes(0), &[0, 0]);
+        assert_eq!(bytes_to_u16(&[0, 0]), 0);
         assert_eq!(&u16_to_bytes(1), &[1, 0]);
+        assert_eq!(bytes_to_u16(&[1, 0]), 1);
         assert_eq!(&u16_to_bytes(2), &[2, 0]);
+        assert_eq!(bytes_to_u16(&[2, 0]), 2);
         assert_eq!(&u16_to_bytes(256), &[0, 1]);
+        assert_eq!(bytes_to_u16(&[0, 1]), 256);
         assert_eq!(&u16_to_bytes(257), &[1, 1]);
+        assert_eq!(bytes_to_u16(&[1, 1]), 257);
         assert_eq!(&u16_to_bytes(65535), &[0xFF, 0xFF]);
+        assert_eq!(bytes_to_u16(&[0xFF, 0xFF]), 0xFFFF);
+    }
+
+    #[test]
+    fn test_u32_to_bytes() {
+        assert_eq!(&u32_to_bytes(0), &[0, 0, 0, 0]);
+        assert_eq!(&u32_to_bytes(1), &[1, 0, 0, 0]);
+        assert_eq!(&u32_to_bytes(2), &[2, 0, 0, 0]);
+        assert_eq!(&u32_to_bytes(256), &[0, 1, 0, 0]);
+        assert_eq!(&u32_to_bytes(257), &[1, 1, 0, 0]);
+        assert_eq!(&u32_to_bytes(65535), &[0xFF, 0xFF, 0, 0]);
+        assert_eq!(&u32_to_bytes(0x11111111), &[0x11, 0x11, 0x11, 0x11]);
+        assert_eq!(&u32_to_bytes(0x12131415), &[0x15, 0x14, 0x13, 0x12]);
+        assert_eq!(&u32_to_bytes(0xFFFF0001), &[1, 0, 0xFF, 0xFF]);
     }
 
     fn _u64_assert(number: u64, bytes_count: u8, buf: &[u8]) {
@@ -140,16 +155,5 @@ mod tests {
         _u64_assert(0x100000000000000, 8, &[0, 0, 0, 0, 0, 0, 0, 1]);
         _u64_assert(0x100000000000001, 8, &[1, 0, 0, 0, 0, 0, 0, 1]);
         _u64_assert(0xFFFFFFFFFFFFFFFF, 8, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
-    }
-
-    #[test]
-    fn test_re_contains() {
-        assert!(re_contains(r"", ""));
-        assert!(re_contains(r"a", "a"));
-        assert!(re_contains(r"b", "abc"));
-        assert!(!re_contains(r"^b", "abc"));
-        assert!(re_contains(r"^a.*c$", "abc"));
-        assert!(re_contains(r"^f(.+) b(.*) b(.{2})$", "foo bar baz"));
-        assert!(!re_contains(r"^f(.+) b(.*) b(.{3})$", "foo bar baz"));
     }
 }

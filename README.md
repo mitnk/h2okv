@@ -107,7 +107,3 @@ The query is formed as follow:
     - No such Key: `\x02` (for `GET`)
     - Unknown command: `\xFF`
 
-## To Do List
-
-- doc all pub functions
-- use a more mature protocol (with header, content len bytes)

@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use crate::store;
+use crate::persistence;
 use crate::tools;
 
 pub fn run(arc_db: Arc<Mutex<store::DB>>) {
@@ -26,6 +27,38 @@ pub fn run(arc_db: Arc<Mutex<store::DB>>) {
             Err(e) => panic!(e),
         }
     }
+}
+
+fn handle_del(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>) -> bool {
+    let klen = tools::bytes_to_u16(&data[3..]);
+    let mut buf_key = Vec::with_capacity(klen as usize);
+    for _ in 0..klen {
+        buf_key.push(0_u8);
+    }
+    match stream.read_exact(&mut buf_key) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("cannot read full key bytes: {:?}", e);
+            return false;
+        }
+    }
+
+    match str::from_utf8(&buf_key) {
+        Ok(key) => {
+            let mut db = arc_db.lock().unwrap();
+            if let Some(_) = store::delete(key, &mut db) {
+                stream.write(b"\x0c\x00").unwrap();
+            } else {
+                stream.write(b"\x0c\x02").unwrap();
+            }
+        }
+        Err(e) => {
+            println!("from_utf8 failed: {:?}", e);
+            stream.write(b"\x0c\x01").unwrap();
+            return false;
+        }
+    }
+    true
 }
 
 fn handle_get(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>) -> bool {
@@ -61,6 +94,75 @@ fn handle_get(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>
         }
     }
 
+    true
+}
+
+fn handle_put(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>) -> bool {
+    let klen = tools::bytes_to_u16(&data[3..]);
+    let mut buf_key = Vec::with_capacity(klen as usize);
+    for _ in 0..klen {
+        buf_key.push(0_u8);
+    }
+    match stream.read_exact(&mut buf_key) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("cannot read full key bytes: {:?}", e);
+            return false;
+        }
+    }
+
+    let key;
+    match str::from_utf8(&buf_key) {
+        Ok(x) => key = x,
+        Err(e) => {
+            println!("from_utf8 failed: {:?}", e);
+            return false;
+        }
+    }
+
+    let mut buf_vllen = [0; 1];
+    match stream.read_exact(&mut buf_vllen) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("cannot read full bytes: {:?}", e);
+            return false;
+        }
+    }
+
+    let mut buf_vlen = Vec::with_capacity(buf_vllen[0] as usize);
+    for _ in 0..buf_vllen[0] {
+        buf_vlen.push(0_u8);
+    }
+    match stream.read_exact(&mut buf_vlen) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("cannot read full len bytes: {:?}", e);
+            return false;
+        }
+    }
+
+    let vlen = tools::bytes_to_u64(&buf_vlen);
+    let mut buf_value = Vec::with_capacity(vlen as usize);
+    for _ in 0..vlen {
+        buf_value.push(0_u8);
+    }
+    match stream.read_exact(&mut buf_value) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("cannot read full content bytes: {:?}", e);
+            return false;
+        }
+    }
+
+    let mut db = arc_db.lock().unwrap();
+    match store::put(key, &buf_value, &mut db) {
+        Ok(_) => {
+            stream.write(b"\x0c\x00").unwrap();
+        }
+        Err(_) => {
+            stream.write(b"\x0c\x01").unwrap();
+        }
+    }
     true
 }
 
@@ -135,18 +237,29 @@ fn handle_client(stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>) {
         match data[1] {
             0x01 => {
                 handle_get(&data, stream, arc_db.clone());
-                continue;
+            }
+            0x02 => {
+                handle_put(&data, stream, arc_db.clone());
+                if let Some(db_file) = tools::get_db_file() {
+                    let db = arc_db.lock().unwrap();
+                    persistence::save_to_file(&db_file, &db);
+                }
+            }
+            0x03 => {
+                handle_del(&data, stream, arc_db.clone());
+                if let Some(db_file) = tools::get_db_file() {
+                    let db = arc_db.lock().unwrap();
+                    persistence::save_to_file(&db_file, &db);
+                }
             }
             0x04 => {
                 handle_scan(&data, stream, arc_db.clone());
-                continue;
             }
             _ => {
                 // unknown command
                 if let Err(_) = stream.write(b"\x0c\xff") {
                     break;
                 }
-                continue;
             }
         }
     }

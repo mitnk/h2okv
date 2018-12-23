@@ -1,9 +1,7 @@
 extern crate byteorder;
-extern crate regex;
 
 use std::sync::{Arc, Mutex};
 
-mod engine;
 mod persistence;
 mod server;
 mod store;

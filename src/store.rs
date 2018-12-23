@@ -10,6 +10,7 @@ use std::str;
 // using String for it to work for now.
 pub type DB = HashMap<String, String>;
 
+/// Get value of the key in KV Store
 pub fn get(key: &str, db: &DB) -> Option<String> {
     match db.get(key) {
         Some(x) => Some(x.clone()),
@@ -17,12 +18,15 @@ pub fn get(key: &str, db: &DB) -> Option<String> {
     }
 }
 
+/// Set value of the key in KV Store to value
+/// Old value will be replaced.
 pub fn put(key: &str, value: &[u8], db: &mut DB) -> Result<(), &'static str> {
     let data = str::from_utf8(value).unwrap();
     db.insert(key.to_string(), data.to_string());
     Ok(())
 }
 
+/// Delete a Key/Value pair from KV Store
 pub fn delete(key: &str, db: &mut DB) -> Option<String> {
     match db.remove(key) {
         Some(x) => Some(x),
@@ -30,6 +34,7 @@ pub fn delete(key: &str, db: &mut DB) -> Option<String> {
     }
 }
 
+/// List all keys contains the key
 pub fn scan(key: &str, db: &DB) -> Vec<String> {
     let mut result = Vec::new();
     for k in db.keys() {
