@@ -3,6 +3,8 @@ use std::net::TcpStream;
 use linefeed::{Interface, ReadResult};
 
 mod cli;
+mod do_get;
+mod do_scan;
 mod tools;
 
 fn main() {

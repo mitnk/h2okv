@@ -25,7 +25,7 @@ bar
 
 Hint: You can use `nc` instead if you don't have telnet on head.
 
-## C/S Protocols
+## H2oKV Protocols
 
 ### Queries
 
@@ -77,7 +77,7 @@ The query is formed as follow:
 
 ### Responses
 
-**GET, SCAN, DEL**
+**GET**
 
     +--------+------+------+-----+---------+
     | Header | Flag | LLen | Len | Content |
@@ -85,7 +85,15 @@ The query is formed as follow:
     | '\x0c' | 1    | 1    | Var | Var     |
     +--------+------+------+-----+---------+
 
-**PUT, Others**
+**SCAN**
+
+    +--------+------+-------+-----+-----+-----+-----+-----+
+    | Header | Flag | Count | Len | Key | Len | Key | ... |
+    +--------+------+-------+-----+-----+-----+-----+-----+
+    | '\x0c' | 1    | 4     | 2   | Var | 2   | Var | ... |
+    +--------+------+-------+-----+-----+-----+-----+-----+
+
+**PUT, DEL, All**
 
     +--------+------+
     | Header | Flag |
@@ -103,4 +111,3 @@ The query is formed as follow:
 
 - doc all pub functions
 - use a more mature protocol (with header, content len bytes)
-- h2okv-cli

@@ -42,12 +42,8 @@ fn handle_get(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>
         }
     }
 
-    println!("data: {:?}", data);
-    println!("key buffer: {:?}", buffer);
-    println!("size: {:?}", size);
     match str::from_utf8(&buffer) {
         Ok(key) => {
-            println!("key: {:?}", key);
             let db = arc_db.lock().unwrap();
             if let Some(x) = store::get(key, &db) {
                 stream.write(b"\x0c\x00").unwrap();
@@ -61,6 +57,52 @@ fn handle_get(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>
         }
         Err(e) => {
             println!("from_utf8 failed: {:?}", e);
+            return false;
+        }
+    }
+
+    true
+}
+
+fn handle_scan(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>) -> bool {
+    let size = tools::bytes_to_u16(&data[3..]);
+    let mut buffer = Vec::with_capacity(size as usize);
+    for _ in 0..size {
+        buffer.push(0_u8);
+    }
+    match stream.read_exact(&mut buffer) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("cannot read full key bytes: {:?}", e);
+            return false;
+        }
+    }
+
+    match str::from_utf8(&buffer) {
+        Ok(key) => {
+            let db = arc_db.lock().unwrap();
+            let items = store::scan(key, &db);
+            let len = items.len();
+            if len == 0 {
+                stream.write(b"\x0c\x02").unwrap();
+                return true;
+            }
+
+            let buf_len = tools::u32_to_bytes(len as u32);
+            stream.write(b"\x0c\x00").unwrap();
+            assert_eq!(buf_len.len(), 4);
+            stream.write(&buf_len).unwrap();
+            for x in items {
+                let klen = x.len();
+                assert!(klen <= 0xFFFF);
+                let buf_klen = tools::u16_to_bytes(klen as u16);
+                assert_eq!(buf_klen.len(), 2);
+                stream.write(&buf_klen).unwrap();
+                stream.write(x.as_bytes()).unwrap();
+            }
+        }
+        Err(e) => {
+            println!("failed when from_utf8: {:?}", e);
             return false;
         }
     }
@@ -93,6 +135,10 @@ fn handle_client(stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>) {
         match data[1] {
             0x01 => {
                 handle_get(&data, stream, arc_db.clone());
+                continue;
+            }
+            0x04 => {
+                handle_scan(&data, stream, arc_db.clone());
                 continue;
             }
             _ => {

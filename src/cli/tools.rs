@@ -11,6 +11,24 @@ pub fn bytes_to_u64(bytes: &[u8]) -> u64 {
     return rdr.read_u64::<LittleEndian>().expect("read_u64 error");
 }
 
+pub fn bytes_to_u32(bytes: &[u8]) -> u32 {
+    let mut buf = [0; 4];
+    for (i, x) in bytes.iter().enumerate() {
+        buf[i] = *x;
+    }
+    let mut rdr = Cursor::new(&buf);
+    return rdr.read_u32::<LittleEndian>().expect("read_u32 error");
+}
+
+pub fn bytes_to_u16(bytes: &[u8]) -> u16 {
+    let mut buf = [0; 2];
+    for (i, x) in bytes.iter().enumerate() {
+        buf[i] = *x;
+    }
+    let mut rdr = Cursor::new(&buf);
+    return rdr.read_u16::<LittleEndian>().expect("read_u16 error");
+}
+
 pub fn u64_to_bytes(n: u64) -> (u8, Vec<u8>) {
     let mut buffer = vec![];
     buffer.write_u64::<LittleEndian>(n).unwrap();
