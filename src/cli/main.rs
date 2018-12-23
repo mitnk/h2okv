@@ -15,7 +15,7 @@ fn main() {
 
     match TcpStream::connect(&addr) {
         Ok(mut stream) => {
-            println!("Connected to h2okv server {}, Ctrl-D to exit", &addr);
+            println!("Connected to h2okv server {}, Ctrl-C to exit", &addr);
 
             let stdin = io::stdin();
             let input = &mut String::new();
