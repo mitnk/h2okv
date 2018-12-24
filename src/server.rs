@@ -79,7 +79,7 @@ fn handle_get(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>>
         Ok(key) => {
             let db = arc_db.lock().unwrap();
             if let Some(x) = store::get(key, &db) {
-                stream.write(b"\x0c\x00").unwrap();
+                stream.write(b"\x0c\x00\x00").unwrap();
                 let (count, len_buffer) = tools::u64_to_bytes(x.len() as u64);
                 stream.write(&[count]).unwrap();
                 stream.write(&len_buffer).unwrap();
@@ -191,7 +191,7 @@ fn handle_scan(data: &[u8], stream: &mut TcpStream, arc_db: Arc<Mutex<store::DB>
             }
 
             let buf_len = tools::u32_to_bytes(len as u32);
-            stream.write(b"\x0c\x00").unwrap();
+            stream.write(b"\x0c\x00\x00").unwrap();
             assert_eq!(buf_len.len(), 4);
             stream.write(&buf_len).unwrap();
             for x in items {

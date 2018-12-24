@@ -41,6 +41,19 @@ pub fn get(key: &str, stream: &mut TcpStream) {
         return;
     }
 
+    let mut buf_flag = [0; 1];
+    match stream.read_exact(&mut buf_flag) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("cannot read full llen bytes: {:?}", e);
+            return;
+        }
+    }
+    if buf_flag[0] != 0x00 {
+        println!("currently, only plain text is supported.");
+        return;
+    }
+
     let mut buf_llen = [0; 1];
     match stream.read_exact(&mut buf_llen) {
         Ok(_) => {}
